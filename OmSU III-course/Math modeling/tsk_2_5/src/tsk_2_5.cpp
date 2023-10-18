@@ -1,82 +1,52 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <initializer_list>
+#include "Complex.h"
+#include "SqueareEquation.h"
 
-const double f(const double &x);
-const double f(const double &x){return (pow(2, x*x)) - 1/x;}
+Complex f(const Complex &x){return Complex{(pow(2, (x*x).re)) - 1/x};}
 
-const double abs(const double &x){return (x>=0.0)? x : -x;}
-
-class Range{
+class ParabolicRootSearh{
 public:
-	const double begin;
-	const double end;
-	Range(const double &begin, const double &end);
-	const double length()const;
-	const double middle()const;
-	const Range left()const;
-	const Range right()const;
-};
-
-Range::Range(const double &begin, const double &end){
-	this->begin = begin;
-	this->end = end;
-}
-const double Range::length()const{return end-begin;}
-const double Range::middle()const{return (begin+end)/2;}
-const Range Range::left()const{return Range(begin, middle());}
-const Range Range::right()const{return Range(middle(), end);}
-
-class BisectionRootApproximation{
-public:
-	const double accuracy;
-	const double (*function)(const double&);
-	BisectionRootApproximation(const double &accuracy, const double (*function)(const double&));
-	const double approximate(const Range &range)const;
+	Complex (*function)(const Complex&);
+	std::vector<Complex> sequence;
+	ParabolicRootSearh(Complex (*function)(const Complex&),
+							   const std::initializer_list<Complex> &value={-1.0, 0.0, 1.0}):
+							   function(function), sequence(value){}
+	Complex search(const double &accuracy);
 private:
-	bool hasSignChanged(const Range &range)const;
+	bool isSequenceConverging()const;
+	std::pair<Complex, Complex> iterateSequence(const Complex &x_n, const Complex &x_n_1, const Complex &x_n_2);
 };
-
-BisectionRootApproximation::BisectionRootApproximation(const double &accuracy, const double (*function)(const double&)){
-	this->accuracy = accuracy;
-	this->function = function;
+bool ParabolicRootSearh::isSequenceConverging()const{
+	auto end = sequence.cend()-1;
+	return (sequence.size() <= 5)? true : abs(*end - *(end-1)) <= abs(*(end-1) - *(end-2));
 }
 
-bool BisectionRootApproximation::hasSignChanged(const Range &range)const{return (function(range.begin) * function(range.end) < 0.0);}
+std::pair<Complex, Complex> ParabolicRootSearh::iterateSequence(const Complex &x_n, const Complex &x_n_1, const Complex &x_n_2){
+	Complex f_1=function(x_n),
+			f_2=function(x_n)/(function(x_n)-function(x_n_1)),
+			f_3=function(x_n)/(function(x_n)-2*function(x_n_1)+function(x_n_2));
+	SqueareEquation eq(f_3, (f_2-(x_n_1 + x_n)*f_3), (f_1 - f_2*x_n + f_3*x_n*x_n_1));
+	std::cout << eq.toString();
+	return eq.solve();
+}
 
-const double BisectionRootApproximation::approximate(const Range &range)const{
-	if(range.length() < this->accuracy){
-		return range.middle();
-	}else{
-		Range &left = range.left();
-		if(hasSignChanged(left)){
-			return approximate(left);
-		}else return approximate(range.right());
+Complex ParabolicRootSearh::search(const double &accuracy){
+	auto end = sequence.cend()-1;
+	while((isSequenceConverging())&&(abs(*end - *(end-1)) > accuracy)){
+		auto solution = iterateSequence(*end, *(end-1), *(end-2));
+		sequence.push_back(solution.first + *end);
 	}
-}
-
-class ParabolicRootApproximation{
-public:
-	std::vector<double> sequence;
-	const double (*function)(const double&);
-	ParabolicRootApproximation(const double (*function)(const double&), const std::vector<double> &sequence);
-	const double approximate(const double &accuracy);
-private:
-	bool isSequenceCollapsing()const;
-};
-
-ParabolicRootApproximation::ParabolicRootApproximation(const double (*function)(const double&), const std::vector<double> &sequence){this->function = function;}
-
-bool ParabolicRootApproximation::isSequenceCollapsing()const{
-	auto end = sequence.end()-1;
-	return abs(*end - *(end-1)) < abs(*(end-1) - *(end-2));
-}
-
-const double ParabolicRootApproximation::approximate(const double &acuracy){
-
+	return sequence.back();
 }
 
 int main() {
-
+	ParabolicRootSearh a(f, {1.8, 1.2, 0.5});
+	Complex x=a.search(0.0001);
+	std::cout << x.toString() << " - root, f("<< x.toString() <<")= " << f(x).toString() << std::endl;
+	for(auto x:a.sequence)
+		std::cout << "f("<< x.toString() << ")= " << f(x).toString() << "\n";
 	return 0;
 }
