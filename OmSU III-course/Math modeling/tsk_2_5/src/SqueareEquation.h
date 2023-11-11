@@ -13,10 +13,10 @@ public:
 		if(a != 0.0){
 			Complex d=b*b - 4*a*c;
 			if(abs(d) == 0.0){
-				return {-b/(2*a), -b/(2*a)};
+				return {-b/(2.0*a), -b/(2.0*a)};
 			}else{
 				auto roots = sqrt(d);
-				return {(roots.first - b)/(2*a), (roots.second - b)/(2*a)};
+				return {(roots.first - b)/(2.0*a), (roots.second - b)/(2.0*a)};
 			}
 		}else{
 			if(b != 0){
@@ -28,7 +28,11 @@ public:
 	}
 	std::string toString()const{
 		std::stringstream ss;
-		ss << a.toString() << "*x^2 " << b.toString() << "*x " << c.toString() << " = 0";
+		ss << a.toString() << "*x^2";
+		(b.re>0 || (b.re == 0 && b.im > 0))? ss << "+" : ss << "";
+		ss<< b.toString() << "*x";
+		(c.re>0 || (c.re == 0 && c.im > 0))? ss << "+" : ss << "";
+		ss << c.toString() << " = 0";
 		return ss.str();
 	}
 };

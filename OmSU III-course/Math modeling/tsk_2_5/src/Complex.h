@@ -9,8 +9,8 @@ class Complex{
 public:
 	double re, im;
 	Complex(const double &re=0.0, const double &im=0.0):re(re), im(im){}
-	Complex paired()const{return Complex{re, -im};}
-	friend double abs(const Complex &cnum){return sqrt(cnum.re*cnum.re + cnum.im*cnum.im);}
+	Complex conjugate()const{return Complex{re, -im};}
+	friend double abs(const Complex &cnum){return std::sqrt(cnum.re*cnum.re + cnum.im*cnum.im);}
 	friend bool operator==(const Complex &l, const Complex &r){return (l.re==r.re)&&(l.im==r.im);}
 	friend bool operator!=(const Complex &l, const Complex &r){return !(l == r);}
 	Complex operator+(const double &num)const{return Complex{re+num, im};}
@@ -27,7 +27,7 @@ public:
 	Complex operator*(const Complex &cnum)const{
 		return Complex{re * cnum.re - im * cnum.im, re * cnum.im + im * cnum.re};}
 	Complex operator/(const Complex &cnum)const{
-			return (*this)*(cnum.paired())/abs(cnum);}
+			return (*this)*(cnum.conjugate())/(std::pow(abs(cnum), 2));}
 	friend std::pair<Complex, Complex> sqrt(const Complex &cnum){
 		double mod = sqrt(abs(cnum));
 		Complex tmp = cnum/abs(cnum);
