@@ -4,11 +4,6 @@
 #include <cmath>
 #include <vector>
 #include "Matrix.h"
-#include "LinearAlgebra.h"
-
-double f1(const std::vector<double> &x){
-	return x[0]*x[0] + x[1]*x[1];
-}
 
 double derivative(const std::function<double(const std::vector<double>&)> &function,
 				  std::vector<double> x, const size_t &i, const double &epsilon=0.00001){
@@ -42,9 +37,9 @@ public:
 	std::vector<double> solve(const std::vector<double> &x0, const double &epsilon = 0.00001){
 		std::vector<double> x = x0, deltaX;
 		do{
-			deltaX = std::move(gauss(calcDerivativeMatrix(x, epsilon), calcValues(x)));
+			deltaX = std::move(calcDerivativeMatrix(x, epsilon/(x.size()*x.size())).inverse() * calcValues(x));
 			for(size_t i=0; i<x.size(); ++i)
-				x[i] += deltaX[i];
+				x[i] -= deltaX[i];
 		}while(!convergenceCondition(deltaX, epsilon));
 		return x;
 	}
@@ -74,7 +69,25 @@ private:
 };
 
 int main(){
-	std::vector<double> x{3.0, 4.0};
-	std::cout << f1(x) << " and derivative: " <<derivative(f1, x, 1);
+	const std::initializer_list<std::function<double(const std::vector<double>&)>> system={
+		[](const std::vector<double> &x){return x[0]*x[0] + x[1]*x[1] - 1;},
+		[](const std::vector<double> &x){return x[1] - 2*x[0];},
+	};
+	NewtonMethod newton{system};
+	std::vector<double> x{2.0, 2.0};
+	x = std::move(newton.solve(x));
+
+	std::stringstream ss;
+	ss << "F(";
+	for(auto value:x)
+		ss << value << ", ";
+	ss.seekp(-2, std::ios_base::cur);
+	ss << ") = ";
+	for(auto func:system)
+		ss << func(x) << ", ";
+	ss.seekp(-2, std::ios_base::end);
+	ss << std::endl;
+
+	std::cout << ss.str();
 	return 0;
 }
