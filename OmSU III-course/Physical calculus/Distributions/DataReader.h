@@ -3,21 +3,28 @@
 
 #include <string>
 #include <iostream>
+#include "Partition.h"
 
-template<class C, typename T = double>
 class DataReader{
 protected:
-	C &partition;
+	Partition<> &partition;
 public:
-	DataReader(C& partition):
+	DataReader(Partition<> &partition):
 		partition(partition){}
-	void read(const std::string &path){
+	Partition<> read(const std::string &path){
 		std::ifstream inputFileStream{path};
-		while(!inputFileStream.eof()){
-			T value;
-			inputFileStream >> value;
-		    partition.add(value);
-		}
+		std::string line;
+		int index = 0;
+		do{
+			std::getline(inputFileStream, line);
+			if(!line.empty()){
+				partition[index] += getStatisticalCell(line);
+				//std::cout << partition[index].toString() << std::endl;
+				++index;
+			}
+		}while(!inputFileStream.eof());
+		inputFileStream.close();
+		return partition;
 	}
 };
 

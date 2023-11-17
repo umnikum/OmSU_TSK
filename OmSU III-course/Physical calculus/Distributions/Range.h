@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <algorithm>
 
 template<typename T = double>
 class Range{
@@ -82,5 +83,27 @@ public:
 	bool toRight(const T &value)const{
 		return (direction == 'l')? value >= this->end : value > this->end;}
 };
+
+Range<> getRange(const std::string &data){
+	const char &leftBracket = data.front(), &rightBracket = data.back();
+	size_t comaIndex = data.find(',');
+	double begin = std::stod(data.substr(1, comaIndex)), end = std::stod(data.substr(comaIndex+1, data.size()-1));
+	switch(leftBracket){
+	case '[':
+		switch(rightBracket){
+		case ')': return HalfRange<>{begin, end, 'l'};
+		case ']': return Segment<>{begin, end};
+		}
+		break;
+	case '(':
+		switch(rightBracket){
+		case ')': return Range<>{begin, end};
+		case ']': return HalfRange<>{begin, end, 'r'};
+		}
+	default:
+		return Range<>{begin, end};
+	}
+	return Range<>{};
+}
 
 #endif /* DEBUG_HALFRANGE_H_ */

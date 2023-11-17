@@ -28,7 +28,7 @@ public:
 					search(value, std::next(begin, halfSize), end);
 		}
 	}
-	StatisticalCell<T>& operator[](const size_t &index)const{return cells.at(index);}
+	StatisticalCell<T>& operator[](const size_t &index){return cells[index];}
 	Partition<T>& add(const T &value){
 		StatisticalCell<T>&  cell = search(value, cells.begin(), cells.end());
 		for(StatisticalSumm<T> &summ:cell.summs)
@@ -68,6 +68,18 @@ std::vector<Range<T>> partUniform(const Range<T> &range, const size_t &partAmoun
 }
 
 template<typename T = double>
+std::vector<Range<T>> partExponential(const T &lambda=1.0, const T &M=100, const T &max=100.0){
+	std::vector<Range<T>> ranges{};
+	T x=0.0;
+	for(size_t k=0; x<max; ++k){
+		T nextX = x + std::pow(1+lambda/M, k)*lambda/M;
+		ranges.push_back(HalfRange<T>{x, nextX});
+		x = nextX;
+	}
+	return ranges;
+}
+
+template<typename T = double>
 std::vector<StatisticalCell<T>> initializeCells(const std::vector<Range<T>> &ranges,
 												const std::initializer_list<std::function<T(const T&)>> &functions){
 	std::vector<StatisticalCell<T>> cells;
@@ -79,6 +91,5 @@ std::vector<StatisticalCell<T>> initializeCells(const std::vector<Range<T>> &ran
 	}
 	return cells;
 }
-
 
 #endif /* PARTITION_H_ */
